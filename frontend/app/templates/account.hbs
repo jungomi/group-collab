@@ -1,0 +1,39 @@
+<h1>Account  <small>{{model.username}}</small></h1>
+
+<div class="row">
+    <div class="col-md-4">
+
+        <div class="panel panel-info">
+            <div class="panel-heading">
+                <h3 class="panel-title">Account</h3>
+            </div>
+
+            <ul class="list-group">
+                <li class="list-group-item"><strong><i class="glyphicon glyphicon-user"></i> Account:</strong><br />{{model.username}}</li>
+                <li class="list-group-item"><strong><i class="glyphicon glyphicon-user"></i> Name:</strong><br />{{model.firstName}} {{model.lastName}}</li>
+            </ul>
+
+        </div>
+
+    </div>
+
+    <div class="col-md-8">
+        <div class="panel panel-info">
+            <div class="panel-heading">
+                <h3 class="panel-title">Your projects</h3>
+            </div>
+
+            <ul class="list-group">
+                {{#each projects as |project|}}
+                  {{#if (eq project.owner.username model.username) }}
+                    <li class="list-group-item">
+                      {{#if project.isPublic}}<span class="label label-success">Public</span>{{else}}
+                          <span class="label label-danger">Private</span>{{/if}}
+                      {{#link-to "project.index" project.id}}{{project.name}}{{/link-to}}</li>
+                  {{/if}}
+                {{/each}}
+            </ul>
+
+        </div>
+    </div>
+</div>

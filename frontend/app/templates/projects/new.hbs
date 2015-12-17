@@ -1,0 +1,11 @@
+<div class="page-header">
+    <h1>New project</h1>
+</div>
+<div class="row">
+    <div class="col-md-6">
+    <form class="form-horizontal" role="form" {{action 'create' on='submit'}}>
+          {{partial 'projects/form'}}
+    </form>
+      <button class="btn btn-large btn-primary" {{action "create"}}>Create</button>
+    </div>
+</div>

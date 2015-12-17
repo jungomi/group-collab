@@ -1,0 +1,331 @@
+<div class="page-header">
+    <h1>{{model.project.name}}</h1>
+</div>
+
+<div class="row">
+    <div class="col-md-3">
+
+        <div class="panel panel-info">
+            <div class="panel-heading">
+                <h3 class="panel-title">About</h3>
+            </div>
+
+            <ul class="list-group">
+                <li class="list-group-item"><strong><i class="glyphicon glyphicon-folder-close"></i> Name:</strong><br />{{model.project.name}}</li>
+                <li class="list-group-item"><strong><i class="glyphicon glyphicon-user"></i> Owner:</strong><br />{{model.project.owner.username}}</li>
+                <li class="list-group-item"><strong><i class="glyphicon glyphicon-eye-open"></i> Visibility:</strong><br />
+                {{#if model.project.isPublic}}<span class="label label-success">Public</span>{{else}}
+                    <span class="label label-danger">Private</span>{{/if}}
+                </li>
+                <li class="list-group-item"><strong><i class="glyphicon glyphicon-user"></i> Members:</strong><br />
+                {{#each model.project.members as |m|}}
+                    {{m.username}}<br />
+                {{/each}}
+                </li>
+                <li class="list-group-item"><strong><i class="glyphicon glyphicon-pencil"></i> Options:</strong><br/>
+                  {{#if (eq sessionAccount.account.username model.project.owner.username) }}
+                    <table>
+                        <tr>
+                            <td style="width:120px;">{{edit-project-form editAction="editProject" model=model project=model.project}}</td>
+                            <td>{{delete-button deleteAction="deleteProject" model=model.project}}</td>
+                        </tr>
+                    </table>
+                  {{else}}
+                    {{#unless (contains model.project.members sessionAccount.account) }}
+                        <button type="button" class="btn btn-primary" {{action "joinProject" model.project}}>Join</button>
+                    {{else}}
+                        <button type="button" class="btn btn-danger" {{action "leaveProject" model.project}}>Leave</button>
+                    {{/unless}}
+                  {{/if}}
+                </li>
+            </ul>
+
+        </div>
+
+    </div>
+
+    <div class="col-md-9">
+        <div class="row">
+            <div class="col-md-6">
+                <h1>Tasks
+                    <a href="javascript:;" data-toggle="collapse" class="collapse_all btn btn-default" data-target=".panel-collapse-task"></a>
+                    <button type="button" class="btn btn-primary pull-right" data-toggle="modal" data-target="#task_modal">
+                        New task
+                    </button>
+                </h1>
+
+              {{#each model.tasks as |task|}}
+                {{#if (eq task.project.id model.project.id)}}
+
+                  <div class="panel panel-info">
+                      <div class="panel-heading" style="background:rgba{{task.colorRGBA}}">
+                          <h3 class="panel-title"><a data-toggle="collapse" data-target="#collapse_{{task.id}}" href="javascript:;">{{task.title}}</a>
+                            {{#if task.isDone}}<span class="label label-success" title="Status">Done</span>{{else}}<span class="label label-danger" title="Status">Open</span>{{/if}}&nbsp;
+                            {{#if (eq task.priority "low") }}<span class="label label-default" title="Priority">low</span>{{/if}}
+                            {{#if (eq task.priority "middle") }}<span class="label label-warning" title="Priority">middle</span>{{/if}}
+                            {{#if (eq task.priority "high") }}<span class="label label-danger" title="Priority">high</span>{{/if}}
+                            <div class="pull-right">
+                              <span class="label label-default">{{format-date task.date "DD.MM.YYYY - HH:mm"}}</span>&nbsp;&nbsp;
+                              <a data-toggle="collapse" class="collapse_a" data-target="#collapse_{{task.id}}" href="javascript:;"></a>
+                            </div>
+                          </h3>
+                      </div>
+                      <div id="collapse_{{task.id}}" class="panel-collapse panel-collapse-task collapse in">
+                      <ul class="list-group">
+                        <li class="list-group-item"><strong>Owner:</strong> {{task.owner.username}}</li>
+                        <li class="list-group-item"><strong>Deadline:</strong>
+                          {{#if task.deadline}}
+                            {{format-date task.deadline "DD.MM.YYYY - HH:mm"}}
+                          {{else}}
+                            <i>No deadline</i>
+                          {{/if}}
+                          </li>
+                        <li class="list-group-item"><strong>Priority:</strong>
+                          {{#if (eq task.priority "low") }}<span class="label label-default">low</span>{{/if}}
+                          {{#if (eq task.priority "middle") }}<span class="label label-warning">middle</span>{{/if}}
+                          {{#if (eq task.priority "high") }}<span class="label label-danger">high</span>{{/if}}
+                        </li>
+                          <li class="list-group-item"><strong>Information:</strong><br />{{breaklines task.text}}</li>
+                        <li class="list-group-item"><strong>Comments:</strong><br />
+                              <ul>
+                                {{#each model.comments as |comment|}}
+                                  {{#if (eq task.id comment.task.id)}}
+                                      <li><b>{{comment.user.username}}</b> ({{format-date comment.date "DD.MM.YYYY - HH:mm"}})<br />{{comment.text}}</li>
+                                  {{/if}}
+                                {{/each}}
+                              </ul>
+                            {{add-task-comment model=model comment=model.comment task=task}}
+                        </li>
+                        <li class="list-group-item"><strong>Assigned users:</strong><br />
+                              <ul>
+                                {{#each task.assignedUsers as |a|}}
+                                    <li>{{a.username}}</li>
+                                {{/each}}
+                              </ul>
+                        </li>
+                        {{#if (or (eq sessionAccount.account.username task.owner.username) (eq sessionAccount.account.username model.project.owner.username)) }}
+                        <li class="list-group-item"><strong>Options:</strong>
+                            <table>
+                                <tr>
+                                    <td style="width:100px;">{{edit-task-form editAction="editTask" model=model task=task}}</td>
+                                  <td>{{delete-button deleteAction="deleteTask" model=task}}</td>
+                              </tr>
+                                </table>
+                        </li>
+                        {{/if}}
+                      </ul>
+                      </div>
+                  </div>
+                {{/if}}
+              {{/each}}
+            </div>
+            <div class="col-md-6">
+                <h1>Notes
+                    <button type="button" class="btn btn-primary pull-right" data-toggle="modal" data-target="#note_modal">
+                        New note
+                    </button>
+                </h1>
+
+              <div class="panel panel-info">
+                  <div class="panel-heading">
+                      <h3 class="panel-title">Notes
+                          <a data-toggle="collapse" class="collapse_a pull-right" data-target="#collapse_note" href="javascript:;"></a>
+                      </h3>
+                  </div>
+                  <div id="collapse_note" class="panel-collapse collapse in">
+                  <ul class="list-group">
+                  {{#each model.notes as |note|}}
+                    {{#if (eq note.project.id model.project.id)}}
+                    <li class="list-group-item note-element" style="background:rgba{{note.colorRGBA}}">
+                        {{breaklines note.text}}<br /><br />
+                        <small>by <strong>{{note.owner.username}}</strong>, {{format-date note.date "DD.MM.YYYY - HH:mm"}}
+                        {{#if (or (eq sessionAccount.account.username note.owner.username) (eq sessionAccount.account.username model.project.owner.username)) }}
+                          <table class="pull-right">
+                              <tr>
+                                  <td style="width:70px;">{{edit-note-form editAction="editNote" model=model note=note}}</td>
+                                  <td>{{delete-button deleteAction="deleteNote" model=note small=true}}</td>
+                            </tr>
+                        </table>
+                        {{/if}}
+                        </small>
+                      </li>
+                    {{/if}}
+                  {{/each}}
+                  </ul>
+                  </div>
+                </div>
+              </div>
+          </div>
+    </div>
+</div>
+
+
+<div id="task_modal" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form class="form-horizontal" id="task_form" {{action 'createTask' on='submit'}}>
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">New task</h4>
+            </div>
+            <div class="modal-body">
+              {{#if errorMessage}}
+                  <div class="alert alert-danger">
+                      <strong>Saving failed:</strong> {{errorMessage}}
+                  </div>
+              {{/if}}
+
+                    <fieldset>
+                        <div class="form-group">
+                            <label class="control-label col-lg-2" for="inputName">Title</label>
+                            <div class="col-lg-10">
+                              {{input value=model.task.title class="form-control"}}
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="control-label col-lg-2" for="inputName">Information</label>
+                            <div class="col-lg-10">
+                              {{textarea value=model.task.text class="form-control" cols="80" rows="6"}}
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="control-label col-lg-2" for="inputName">Deadline</label>
+                            <div class="col-lg-10">
+                            <div class="input-group date datetimepicker">
+                                {{input value=model.task.deadline id="datetimepicker_input" class="form-control"}}
+                                <span class="input-group-addon">
+                                    <span class="glyphicon glyphicon-calendar"></span>
+                                </span>
+                            </div>
+                            </div>
+                            <script type="text/javascript">
+                                $(function () {
+                                    $('.datetimepicker').datetimepicker({
+                                        minDate: moment()
+                                    });
+                                    $(".datetimepicker").on("dp.change", function (e) {
+                                        $('datetimepicker_input').focus();
+                                    });
+                                });
+                            </script>
+                        </div>
+
+
+                        <div class="form-group">
+                          <label class="control-label col-lg-2" for="inputName">Color</label>
+                          <div class="col-lg-10">
+                          <div class="input-group colorpicker" style="z-index:0;">
+                            {{input value=model.task.color id="colorpicker_input" class="form-control"}}
+                              <span class="input-group-addon"><i></i></span>
+                          </div>
+                          </div>
+                          <script>
+                              $(function(){
+                                  $('.colorpicker').colorpicker({
+                                      format: 'hex'
+                                  });
+                                  $('.colorpicker').colorpicker().on('changeColor.colorpicker', function(event) {
+                                      $("#colorpicker_input").focus();
+                                  });
+                              });
+                          </script>
+                        </div>
+
+
+
+                        <div class="form-group">
+                            <label class="control-label col-lg-2" for="inputName">Priority</label>
+                            <div class="col-lg-10">
+                                <select class="form-control" onchange={{action "priorityChanged" value="target.value"}}>
+                                    <option value="low" selected={{eq task.priority "low"}}>low</option>
+                                    <option value="middle" selected={{eq task.priority "middle"}}>middle</option>
+                                    <option value="high" selected={{eq task.priority "high"}}>high</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="control-label col-lg-2" for="inputName">is Done?</label>
+                            <div class="col-lg-10">
+                              {{input type="checkbox" name="isDone" checked=model.task.isDone}}
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="control-label col-lg-2" for="inputMembers">Assigned Users</label>
+                            <div class="col-lg-10">
+                              {{#each model.project.members as |member|}}
+                                  <li>{{ user-checkbox-task member=member task=model.task }}</li>
+                              {{/each}}
+
+                            </div>
+                        </div>
+
+                        <input type="hidden" value={{model.task.id}} id="id"/>
+                    </fieldset>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button class="btn btn-large btn-primary" type="submit">Save</button>
+            </div>
+        </form>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+
+<div id="note_modal" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form class="form-horizontal" id="note_form" {{action 'createNote' on='submit'}}>
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">New note</h4>
+            </div>
+            <div class="modal-body">
+              {{#if errorMessage}}
+                  <div class="alert alert-danger">
+                      <strong>Saving failed:</strong> {{errorMessage}}
+                  </div>
+              {{/if}}
+
+                    <fieldset>
+                        <div class="form-group">
+                            <label class="control-label col-lg-2" for="inputName">Text</label>
+                            <div class="col-lg-10">
+                              {{textarea value=note_text class="form-control" cols="80" rows="6"}}
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="control-label col-lg-2" for="inputName">Color</label>
+                            <div class="col-lg-10">
+                                <div class="input-group colorpicker2">
+                                  {{input value=note_color id="colorpicker2_input" class="form-control"}}
+                                    <span class="input-group-addon"><i></i></span>
+                                </div>
+                            </div>
+                            <script>
+                                $(function(){
+                                    $('.colorpicker2').colorpicker({
+                                        color: "#ffffff",
+                                        format: 'hex'
+                                    });
+                                    $('.colorpicker2').colorpicker().on('changeColor.colorpicker', function(event) {
+                                      $("#colorpicker2_input").focus();
+                                    });
+                                });
+                            </script>
+                        </div>
+                    </fieldset>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button class="btn btn-large btn-primary" type="submit">Save</button>
+            </div>
+            </form>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->

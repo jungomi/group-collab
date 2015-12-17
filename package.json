@@ -1,0 +1,16 @@
+{
+  "name": "group-collab",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Group collaboration",
+  "scripts": {
+    "start": "npm run start:backend & npm run start:frontend",
+    "start:frontend": "cd frontend/ && ember serve",
+    "start:backend": "node ./backend/bin/www",
+    "install": "npm run install:frontend & npm run install:backend",
+    "install:frontend": "cd frontend/ && npm install && bower install",
+    "install:backend": "cd backend/ && npm install"
+  },
+  "author": "Andreas Hohler, Karan Sethi, Michael Jungo",
+  "license": "MIT"
+}
